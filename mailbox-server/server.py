@@ -4,6 +4,7 @@ import pymysql
 from pymysql.err import IntegrityError
 import string
 import time
+import sys
 
 import helper
 import constants
@@ -21,12 +22,18 @@ def on_new_client(clientsocket, addr, db):
         done = True
 
 def main():      
+
+    host = sys.argv[1]
+    user = sys.argv[2]
+    pw = sys.argv[3]
+    db = sys.argv[4]
+    port = int(sys.argv[5])                
+
     # Open database connection
-    db = pymysql.connect("localhost","mboxserver","catfishbookwormzebra","mbox" )
+    db = pymysql.connect(host, user, pw, db)
 
     s = socket.socket()        
-    port = 8080                
-
+    
     print ('Server started. Waiting for clients...')
 
     s.bind(('', port))        # '' for all interfaces
