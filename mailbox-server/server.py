@@ -9,44 +9,57 @@ import sys
 import helper
 import constants
 
+class Server:
 
-def on_new_client(clientsocket, addr, db):
-    done = False
-    while not done:
+  done_serving = False
+
+  def __init__(self, host, user, pw, dbname, port):
+    # Open database connection
+    self.db = pymysql.connect(host, user, pw, dbname)
+    self.port = port
+
+  def start_listening(self):
+    self.server_socket = socket.socket()        
+    
+    print ('Server started. Waiting for clients...')
+
+    self.server_socket.bind(('', self.port))        # '' for all interfaces
+    self.server_socket.listen(1000)       
+    self.server_socket.settimeout(3)         
+
+    while not(self.done_serving):
+      try:
+        client, addr = self.server_socket.accept()    
+        client_thread = threading.Thread(target=self.on_new_client, args=(client, addr, self.db))
+        client_thread.start()
+      except socket.timeout:
+        pass
+
+    self.server_socket.close()
+
+
+  def on_new_client(self, clientsocket, addr, db):
+    client_done = False
+    while not client_done:
       request = clientsocket.recv(1024)
       response = helper.handle_request(request, addr, db)
       try:
         clientsocket.send(response)
       except BrokenPipeError:
         clientsocket.close()
-        done = True
+        client_done = True
 
-def main():      
-
+  def stop_server(self):
+    self.done_serving = True
+ 
+if __name__ == '__main__':
     host = sys.argv[1]
     user = sys.argv[2]
     pw = sys.argv[3]
-    db = sys.argv[4]
-    port = int(sys.argv[5])                
+    dbname = sys.argv[4]
+    port = int(sys.argv[5])               
 
-    # Open database connection
-    db = pymysql.connect(host, user, pw, db)
+    server = Server(host, user, pw, dbname, port)
+    server.start_listening()
 
-    s = socket.socket()        
-    
-    print ('Server started. Waiting for clients...')
-
-    s.bind(('', port))        # '' for all interfaces
-    s.listen(1000)                
-
-    while True:
-       c, addr = s.accept()    
-       x = threading.Thread(target=on_new_client, args=(c, addr, db))
-       x.start()
-
-    s.close()
-
-if __name__ == '__main__':
-    # execute only if run as a script
-    main()
 

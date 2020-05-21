@@ -504,7 +504,7 @@ def handle_register(appId, userId, addr, db):
 
   if results == None:
     print ("<{threadName}-{addr}>: userId not in app_user for app {appId} in db".format(**locals()))
-    registeredOk = do_register_user(appId, userId, addr, cursor)
+    registeredOk = do_register_user(appId, userId, addr, cursor, db)
     if not(registeredOk):
       response = build_response(STATUS_INTERNAL_ERROR)
       print("<{threadName}-{addr}>: REGISTER failed. Response: {response}".format(**locals()))
@@ -536,7 +536,7 @@ def zeroPad(s, length):
     return arr
 
 
-def do_register_user(appId, userId, addr, cursor):
+def do_register_user(appId, userId, addr, cursor, db):
   threadName = threading.currentThread().name    
   print ("<{threadName}-{addr}> userId {userId} is not yet registered for app {appId} in db ".format(**locals()))
   try:
