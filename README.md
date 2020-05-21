@@ -1,4 +1,8 @@
 # mailbox-server
+
+requires mariadb installing first. ddl file in mailbox-server directory. running test wipes and installs the schema once the user is setup.
+
+
 cd mailbox-server
 setup python virtual env:
 
