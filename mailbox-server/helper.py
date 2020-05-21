@@ -55,7 +55,7 @@ def handle_request(request, addr, db):
           print("<{threadName}-{addr}>: MISSING message for send msg cmd. Response {response}".format(**locals()))
           return response
         message = message.decode()
-        message = message[0:-2] # remove /r/n common to all requests
+        #message = message[0:-1] # remove final \x00 common to all requests
         printable = set(string.printable) #ascii only
         message = "".join(filter(lambda x: x in printable, message))
         if message == None or len(message) == 0:
