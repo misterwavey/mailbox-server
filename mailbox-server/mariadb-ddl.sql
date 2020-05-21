@@ -16,7 +16,9 @@ CONSTRAINT unique_nickname UNIQUE (nickname),
 CONSTRAINT unique_userid UNIQUE (userid)
 );
 
-insert into user values ('stuart','bahoj-sibof-lobut-sujar');
+insert into user values ('stuart', 'bahoj-sibof-lobut-sujar');
+insert into user values ('stuart2','cahoj-sibof-lobut-sujar');
+insert into user values ('stuart3','dahoj-sibof-lobut-sujar');
 
 -- truncate table app;
 -- drop table app;

@@ -25,7 +25,7 @@ class Server:
 
     self.server_socket.bind(('', self.port))        # '' for all interfaces
     self.server_socket.listen(1000)       
-    self.server_socket.settimeout(3)         
+    self.server_socket.settimeout(0.2)         
 
     while not(self.done_serving):
       try:
