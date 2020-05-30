@@ -31,6 +31,8 @@ CONSTRAINT unique_appname UNIQUE (appname)
 );
 
 insert into app values ('nxtmail',1);
+insert into app values ('nxtnoughts',2);
+
 
 
 -- truncate table app_user;
