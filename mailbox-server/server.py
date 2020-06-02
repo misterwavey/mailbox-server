@@ -14,8 +14,10 @@ class Server:
   done_serving = False
 
   def __init__(self, host, user, pw, dbname, port):
-    # Open database connection
-    self.db = pymysql.connect(host, user, pw, dbname)
+    self.host = host
+    self.user = user
+    self.pw = pw
+    self.dbname = dbname
     self.port = port
 
   def start_listening(self):
@@ -30,7 +32,7 @@ class Server:
     while not(self.done_serving):
       try:
         client, addr = self.server_socket.accept()    
-        client_thread = threading.Thread(target=self.on_new_client, args=(client, addr, self.db))
+        client_thread = threading.Thread(target=self.on_new_client, args=(client, addr, self.host, self.user, self.pw, self.dbname))
         client_thread.start()
       except socket.timeout:
         pass
@@ -38,7 +40,8 @@ class Server:
     self.server_socket.close()
 
 
-  def on_new_client(self, clientsocket, addr, db):
+  def on_new_client(self, clientsocket, addr, host, user, pw, dbname):
+    db = pymysql.connect(host, user, pw, dbname)
     client_done = False
     while not client_done:
       request = clientsocket.recv(1024)
