@@ -5,6 +5,7 @@ from pymysql.err import IntegrityError
 import string
 import time
 import sys
+import logging
 
 import helper
 import constants
@@ -19,11 +20,12 @@ class Server:
     self.pw = pw
     self.dbname = dbname
     self.port = port
+    logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.DEBUG)
 
   def start_listening(self):
     self.server_socket = socket.socket()        
     
-    print ('Server started. Waiting for clients...')
+    logging.debug ('Server started. Waiting for clients...')
 
     self.server_socket.bind(('', self.port))        # '' for all interfaces
     self.server_socket.listen(1000)       

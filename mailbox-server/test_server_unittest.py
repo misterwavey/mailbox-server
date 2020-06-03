@@ -4,6 +4,7 @@ import pymysql
 import sys
 import threading
 import time
+import logging
 
 import server
 
@@ -169,11 +170,16 @@ class TestServer(unittest.TestCase):
       "2/3 register dahojsiboflobutsujar",
       bytes([0, 1, 1, 2, 100, 97, 104, 111, 106, 115, 105, 98, 111, 102, 108, 111, 98, 117, 116, 115, 117, 106, 97, 114]),
       bytes([51, 115, 116, 117, 97, 114, 116, 51, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0])
-   ],
+    ],
     [
       "2/3 join pool for reg user for app (205 + pool id)",
       bytes([0, 1, 6, 2, 99, 97, 104, 111, 106, 115, 105, 98, 111, 102, 108, 111, 98, 117, 116, 115, 117, 106, 97, 114, 3]),
       bytes([55, 1, 0])
+    ],
+    [
+      "get pool ok - still unfilled",
+      bytes([0, 1, 7, 2, 98, 97, 104, 111, 106, 115, 105, 98, 111, 102, 108, 111, 98, 117, 116, 115, 117, 106, 97, 114, 1, 0]),
+      bytes([58])
     ],
     [
       "3/3 join pool for reg user for app (205 + pool id)",
@@ -243,5 +249,6 @@ if __name__ == '__main__':
       TestServer.pw = sys.argv.pop()
       TestServer.user = sys.argv.pop()
       TestServer.host = sys.argv.pop()
+      logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%m/%d/%Y %H:%M:%S', level=logging.DEBUG)
   
     unittest.main()   
