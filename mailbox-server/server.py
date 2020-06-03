@@ -20,7 +20,7 @@ class Server:
     self.pw = pw
     self.dbname = dbname
     self.port = port
-    logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y/%m/%d %H:%M:%S %H:%M:%S', level=logging.DEBUG)
+    logging.basicConfig(format='%(asctime)s %(message)s', datefmt='%Y/%m/%d %H:%M:%S', level=logging.DEBUG)
 
   def start_listening(self):
     self.server_socket = socket.socket()        
