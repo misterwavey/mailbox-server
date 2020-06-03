@@ -8,7 +8,6 @@ import logging
 from constants import *
 
 def handle_request(request, addr, db):
-  threadName = threading.currentThread().name
   db.ping(reconnect=True)
   if len(request) < 24:
     response = build_response(STATUS_INVALID_LENGTH)
