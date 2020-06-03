@@ -12,7 +12,7 @@ def handle_request(request, addr, db):
   if len(request) < 24:
     response = build_response(STATUS_INVALID_LENGTH)
     rLen = len(request)
-    logging.debug("<{threadName}-{addr}>: short request: {request} len {rLen}. Response {response}".format(**locals()))
+    logging.debug("<{addr}>: short request: {request} len {rLen}. Response {response}".format(**locals()))
     return response
   else:
     protoMajor = request[0]
@@ -24,15 +24,15 @@ def handle_request(request, addr, db):
     nickname   = "" #optional
     message    = "" #optional
 
-    logging.debug("<{threadName}-{addr}>: request: {request} maj {protoMajor} min {protoMinor} cmd {cmd} appid {appId} userId ".format(**locals()))
+    logging.debug("<{addr}>: request: {request} maj {protoMajor} min {protoMinor} cmd {cmd} appid {appId} userId ".format(**locals()))
     if not(protoMajor == 0 and protoMinor == 1):
       response = build_response(STATUS_INVALID_PROTOCOL)
-      logging.debug("<{threadName}-{addr}>: invalid protocol: {request}. Response {response}".format(**locals()))
+      logging.debug("<{addr}>: invalid protocol: {request}. Response {response}".format(**locals()))
       return response
 
     if not(isValidUserId(userId, db)):
       response = build_response(STATUS_UNKNOWN_USERID)
-      logging.debug ("<{threadName}-{addr}>: userId {userId} is not registered with mbox in db. Response {response}".format(**locals()))
+      logging.debug ("<{addr}>: userId {userId} is not registered with mbox in db. Response {response}".format(**locals()))
       return response
  
     if cmd == CMD_REGISTER:
@@ -46,13 +46,13 @@ def handle_request(request, addr, db):
       nickname = parse_param_as_nickname(request)
       if nickname == None or len(nickname) == 0:
         response = build_response(STATUS_MISSING_NICKNAME)
-        logging.debug("<{threadName}-{addr}>: missing nickname: {request}. Response {response}".format(**locals()))
+        logging.debug("<{addr}>: missing nickname: {request}. Response {response}".format(**locals()))
         return response    
       if len(request) > 44:
         message = request[44:301]
         if message == None or len(message) == 0:
           response = build_response(STATUS_MISSING_MESSAGE)
-          logging.debug("<{threadName}-{addr}>: MISSING message for send msg cmd. Response {response}".format(**locals()))
+          logging.debug("<{addr}>: MISSING message for send msg cmd. Response {response}".format(**locals()))
           return response
         message = message.decode()
         #message = message[0:-1] # remove final \x00 common to all requests
@@ -60,12 +60,12 @@ def handle_request(request, addr, db):
         message = "".join(filter(lambda x: x in printable, message))
         if message == None or len(message) == 0:
           response = build_response(STATUS_MISSING_MESSAGE)
-          logging.debug("<{threadName}-{addr}>: MISSING message for send msg cmd. Response {response}".format(**locals()))
+          logging.debug("<{addr}>: MISSING message for send msg cmd. Response {response}".format(**locals()))
           return response
         return handle_send(appId, userId, nickname, message, addr, db)
       else:
         response = build_response(STATUS_MISSING_MESSAGE)
-        logging.debug("<{threadName}-{addr}>: MISSING message for send msg cmd. Response {response}".format(**locals()))
+        logging.debug("<{addr}>: MISSING message for send msg cmd. Response {response}".format(**locals()))
         return response
 
     elif cmd == CMD_MESSGAGE_COUNT:
@@ -73,49 +73,48 @@ def handle_request(request, addr, db):
 
     elif cmd == CMD_GET_MESSAGE:
       if len(request) < 26: #2bytes for msgid
-        logging.debug ("<{threadName}-{addr}> missing message Id for get message".format(**locals()))
+        logging.debug ("<{addr}> missing message Id for get message".format(**locals()))
         return build_response(STATUS_MISSING_MESSAGE_ID)
       else:    
         b = bytes(request[24:26])
         messageId = int.from_bytes(b,byteorder="little")
-        logging.debug ("<{threadName}-{addr}> extracted '{messageId}' for message id".format(**locals()))
+        logging.debug ("<{addr}> extracted '{messageId}' for message id".format(**locals()))
         if messageId < 1:
-          logging.debug ("<{threadName}-{addr}> invalid number '{messageId}' for message id".format(**locals()))
+          logging.debug ("<{addr}> invalid number '{messageId}' for message id".format(**locals()))
           return build_response(STATUS_INVALID_MESSAGE_ID)
 
         return handle_get_message(appId, userId, messageId, addr, db)
 
     elif cmd == CMD_JOIN_POOL:
       if len(request) < 25:
-        logging.debug ("<{threadName}-{addr}> missing size for join pool".format(**locals()))
+        logging.debug ("<{addr}> missing size for join pool".format(**locals()))
         return build_response(STATUS_MISSING_POOL_SIZE)
       size = request[24]
       return handle_join_pool(appId, userId, size, addr, db)
 
     elif cmd == CMD_GET_POOL:
       if len(request) < 26: # 2 bytes for poolId
-        logging.debug ("<{threadName}-{addr}> missing poolId for get pool".format(**locals()))
+        logging.debug ("<{addr}> missing poolId for get pool".format(**locals()))
         return build_response(STATUS_MISSING_POOL_ID)
       else:    
         b = bytes(request[24:26])
         poolId = int.from_bytes(b,byteorder="little")
-        logging.debug ("<{threadName}-{addr}> extracted '{poolId}' for poolId".format(**locals()))
+        logging.debug ("<{addr}> extracted '{poolId}' for poolId".format(**locals()))
         if poolId < 1:
-          logging.debug ("<{threadName}-{addr}> invalid number '{poolId}' for poolId".format(**locals()))
+          logging.debug ("<{addr}> invalid number '{poolId}' for poolId".format(**locals()))
           return build_response(STATUS_INVALID_POOL_ID)
 
       return handle_get_pool(appId, userId, poolId, addr, db)
 
     else:
       response = build_response(STATUS_INVALID_CMD)
-      logging.debug("<{threadName}-{addr}>: invalid cmd: {request}. Response {response}".format(**locals()))
+      logging.debug("<{addr}>: invalid cmd: {request}. Response {response}".format(**locals()))
       return response
 
 def handle_get_pool(appId, userId, poolId, addr, db):
-  threadName = threading.currentThread().name  
   if not(isValidUserIdForApp(userId, appId, db)):
     response = build_response(STATUS_UNREGISTERED_USERID)
-    logging.debug ("<{threadName}-{addr}>: userId {userId} is not registered with app {appId} in db. Response {response}".format(**locals()))
+    logging.debug ("<{addr}>: userId {userId} is not registered with app {appId} in db. Response {response}".format(**locals()))
     return response 
 
   cursor = db.cursor()
@@ -173,18 +172,17 @@ def handle_get_pool(appId, userId, poolId, addr, db):
   
    
 def handle_join_pool(appId, userId, size, addr, db):
-  threadName = threading.currentThread().name  
   if not(isValidUserIdForApp(userId, appId, db)):
     response = build_response(STATUS_UNREGISTERED_USERID)
-    logging.debug ("<{threadName}-{addr}>: userId {userId} is not registered with app {appId} in db. Response {response}".format(**locals()))
+    logging.debug ("<{addr}>: userId {userId} is not registered with app {appId} in db. Response {response}".format(**locals()))
     return response 
 
   if not(size > 1 and size <= 16):
     response = build_response(STATUS_INVALID_POOLSIZE)
-    logging.debug ("<{threadName}-{addr}>: app {appId} asking for invalid size {size}. Response {response}".format(**locals()))
+    logging.debug ("<{addr}>: app {appId} asking for invalid size {size}. Response {response}".format(**locals()))
     return response   
 
-  logging.debug ("<{threadName}-{addr}> userId {userId} joining pool of size {size} for appid {appId} in db ".format(**locals()))
+  logging.debug ("<{addr}> userId {userId} joining pool of size {size} for appid {appId} in db ".format(**locals()))
 
   db.begin() # start transaction 
   
@@ -230,8 +228,7 @@ def handle_join_pool(appId, userId, size, addr, db):
     return build_response(STATUS_INTERNAL_ERROR)
 
 def handle_new_pool(appId, userId, size, addr, db):
-  threadName = threading.currentThread().name    
-  logging.debug ("<{threadName}-{addr}> no existing pool of size {size} for appid {appId} in db ".format(**locals()))
+  logging.debug ("<{addr}> no existing pool of size {size} for appid {appId} in db ".format(**locals()))
 
   cursor = db.cursor()
   unixtime_ms = time.time_ns() // 1000000
@@ -277,10 +274,9 @@ def parse_param_as_nickname(request):
     return nickname
 
 def handle_send(appId, userId, nickname, message, addr, db):
-    threadName = threading.currentThread().name    
     if not(isValidUserIdForApp(userId, appId, db)):
       response = build_response(STATUS_UNREGISTERED_USERID)
-      logging.debug ("<{threadName}-{addr}>: userId {userId} is not registered with app {appId} in db. Response {response}".format(**locals()))
+      logging.debug ("<{addr}>: userId {userId} is not registered with app {appId} in db. Response {response}".format(**locals()))
       return response
 
     if nickname == "*":
@@ -295,8 +291,7 @@ def do_send_to_all(appId, userId, message, db):
 
 
 def do_send_to_nick(appId, userId, nickname, message, addr, db):
-  threadName = threading.currentThread().name    
-  logging.debug ("<{threadName}-{addr}> checking if nick {nickname} is registered for app {appId} in db ".format(**locals()))
+  logging.debug ("<{addr}> checking if nick {nickname} is registered for app {appId} in db ".format(**locals()))
   status = do_check_registered_nickname_for_app(appId, userId, nickname, addr, db)
   if status == STATUS_UNREGISTERED_NICKNAME or status == STATUS_INTERNAL_ERROR:
     return build_response(status)
@@ -306,8 +301,7 @@ def do_send_to_nick(appId, userId, nickname, message, addr, db):
 
 
 def do_store_message(userId, appId, nickname, message, addr, db):
-  threadName = threading.currentThread().name    
-  logging.debug ("<{threadName}-{addr}> userId {userId} storing msg {message} for nickname {nickname} in app {appId} in db ".format(**locals()))
+  logging.debug ("<{addr}> userId {userId} storing msg {message} for nickname {nickname} in app {appId} in db ".format(**locals()))
   cursor = db.cursor()
   targetUserId = get_userid_for_nickname(appId, nickname, addr, db)
   if targetUserId == None:
@@ -326,14 +320,13 @@ def do_store_message(userId, appId, nickname, message, addr, db):
 
 
 def get_userid_for_nickname(appId, nickname, addr, db):
-  threadName = threading.currentThread().name    
   cursor = db.cursor()
   try:
     sql = "SELECT userid FROM user where nickname = %s;"
     cursor.execute(sql, (nickname))
     results = cursor.fetchone()
     if results == None:
-      logging.debug ("<{threadName}-{addr}> nickname {nickname} is not found in db. Returning internal error".format(**locals()))
+      logging.debug ("<{addr}> nickname {nickname} is not found in db. Returning internal error".format(**locals()))
       return None
     else:
       nickname = results[0]
@@ -344,10 +337,9 @@ def get_userid_for_nickname(appId, nickname, addr, db):
 
 
 def handle_get_message(appId, userId, messageId, addr, db):
-  threadName = threading.currentThread().name  
   if not(isValidUserIdForApp(userId, appId, db)):
     response = build_response(STATUS_UNREGISTERED_USERID)
-    logging.debug ("<{threadName}-{addr}>: userId {userId} is not registered with app {appId} in db. Response {response}".format(**locals()))
+    logging.debug ("<{addr}>: userId {userId} is not registered with app {appId} in db. Response {response}".format(**locals()))
     return response 
   cursor = db.cursor()
   try:  
@@ -355,20 +347,20 @@ def handle_get_message(appId, userId, messageId, addr, db):
     cursor.execute(sql, (appId, userId,))
     results = cursor.fetchall()
     if results == None:
-      logging.debug ("<{threadName}-{addr}> failed to locate list of messages for userId {userId} in appId {appId} in db. results {results}".format(**locals()))
+      logging.debug ("<{addr}> failed to locate list of messages for userId {userId} in appId {appId} in db. results {results}".format(**locals()))
       response = build_response(STATUS_INTERNAL_ERROR)
       return response
     else:
       messageIds = results
       messageCount = len(messageIds)
-      logging.debug ("<{threadName}-{addr}> userId has {messageCount} messages for appId {appId} in db".format(**locals()))
+      logging.debug ("<{addr}> userId has {messageCount} messages for appId {appId} in db".format(**locals()))
       if messageId <= messageCount:
         actualMessageId = messageIds[messageId-1]
         sql = "select message,authorUserId from message where messageId = %s"
         cursor.execute(sql, (actualMessageId))
         results = cursor.fetchall()
         if results == None:
-          logging.debug ("<{threadName}-{addr}> failed to locate messageId {messageId} in db. results {results}".format(**locals()))
+          logging.debug ("<{addr}> failed to locate messageId {messageId} in db. results {results}".format(**locals()))
           response = build_response(STATUS_INTERNAL_ERROR)
           return response
         else:
@@ -384,44 +376,42 @@ def handle_get_message(appId, userId, messageId, addr, db):
           authorNick = lookup_nick_for_userid(authorUserId,db,addr)
           zAuthorNick = zeroPad(authorNick,20)
           if authorNick == None:
-              logging.debug ("<{threadName}-{addr}> failed to lookup nick for user {userId}".format(**locals()))
+              logging.debug ("<{addr}> failed to lookup nick for user {userId}".format(**locals()))
               response = build_response(STATUS_INTERNAL_ERROR)
               return response
-          logging.debug ("<{threadName}-{addr}> returning message of len {messageLen} with messageid {messageId} from author {authorNick} for user {userId}".format(**locals()))
+          logging.debug ("<{addr}> returning message of len {messageLen} with messageid {messageId} from author {authorNick} for user {userId}".format(**locals()))
           response = bytes(bytearray(bStatus + zAuthorNick + bLen + bMessage))
           return response
       else:
-          logging.debug ("<{threadName}-{addr}> invalid messageid {messageId} for user {userId}".format(**locals()))
+          logging.debug ("<{addr}> invalid messageid {messageId} for user {userId}".format(**locals()))
           response = build_response(STATUS_INVALID_MESSAGE_ID)
           return response
   except IntegrityError as e:
-    logging.debug ("<{threadName}-{addr}> Caught an IntegrityError:"+str(e))
+    logging.debug ("<{addr}> Caught an IntegrityError:"+str(e))
     response = build_response(STATUS_INTERNAL_ERROR)
     return response
 
 def lookup_nick_for_userid(userId,db,addr):
-  threadName = threading.currentThread().name    
   cursor = db.cursor()  
   try:
     sql = "select nickname from user where userId = %s"
     cursor.execute(sql, (userId,))
     results = cursor.fetchone()
     if results == None:
-      logging.debug ("<{threadName}-{addr}> failed to locate nick of userId {userId} in db".format(**locals()))
+      logging.debug ("<{addr}> failed to locate nick of userId {userId} in db".format(**locals()))
       return None
     else:
       nick = results[0] 
-      logging.debug ("<{threadName}-{addr}> userId {userId} has nick {nick} in db".format(**locals()))
+      logging.debug ("<{addr}> userId {userId} has nick {nick} in db".format(**locals()))
       return nick
   except IntegrityError as e:
-    logging.debug ("<{threadName}-{addr}> Caught an IntegrityError:"+str(e))
+    logging.debug ("<{addr}> Caught an IntegrityError:"+str(e))
     return None
 
 def handle_get_message_count(appId, userId, addr, db):
-  threadName = threading.currentThread().name   
   if not(isValidUserIdForApp(userId, appId, db)):
     response = build_response(STATUS_UNREGISTERED_USERID)
-    logging.debug ("<{threadName}-{addr}>: userId {userId} is not registered with app {appId} in db. Response {response}".format(**locals()))
+    logging.debug ("<{addr}>: userId {userId} is not registered with app {appId} in db. Response {response}".format(**locals()))
     return response 
   cursor = db.cursor()
   try:
@@ -429,38 +419,35 @@ def handle_get_message_count(appId, userId, addr, db):
     cursor.execute(sql, (appId, userId,))
     results = cursor.fetchone()
     if results == None:
-      logging.debug ("<{threadName}-{addr}> failed to locate count of messages for userId {userId} in appId {appId} in db. results {results}".format(**locals()))
+      logging.debug ("<{addr}> failed to locate count of messages for userId {userId} in appId {appId} in db. results {results}".format(**locals()))
       response = build_response(STATUS_INTERNAL_ERROR)
       return response
     else:
       messageCount = results[0] 
-      logging.debug ("<{threadName}-{addr}> userId has {messageCount} messages for appId {appId} in db".format(**locals()))
+      logging.debug ("<{addr}> userId has {messageCount} messages for appId {appId} in db".format(**locals()))
       response = bytes([STATUS_COUNT_OK] + list(messageCount.to_bytes(2, byteorder="little"))) # todo OverflowError raised if num > 2 bytes
       return response
   except IntegrityError as e:
-    logging.debug ("<{threadName}-{addr}> Caught an IntegrityError:"+str(e))
+    logging.debug ("<{addr}> Caught an IntegrityError:"+str(e))
     response = build_response(STATUS_INTERNAL_ERROR)
     return response
 
 
 def handle_check_registered_nickname(appId, userId, nickname, addr, db):
-  threadName = threading.currentThread().name    
-
   if nickname == None or len(nickname) == 0:
     response = build_response(STATUS_MISSING_NICKNAME)
-    logging.debug("<{threadName}-{addr}>: MISSING nickname for check registered nickname cmd. Response: {response}".format(**locals()))
+    logging.debug("<{addr}>: MISSING nickname for check registered nickname cmd. Response: {response}".format(**locals()))
     return response
 
-  logging.debug("<{threadName}-{addr}>: checking nickname")
+  logging.debug("<{addr}>: checking nickname")
   status = do_check_registered_nickname_for_app(appId, userId, nickname, addr, db)
   response = build_response(status)
-  logging.debug("<{threadName}-{addr}>: response: {response}".format(**locals()))
+  logging.debug("<{addr}>: response: {response}".format(**locals()))
   return response
  
 
 def do_check_registered_nickname_for_app(appId, userId, nickname, addr, db):
-  threadName = threading.currentThread().name    
-  logging.debug ("<{threadName}-{addr}> checking if nick {nickname} is registered for app {appId} in db ".format(**locals()))
+  logging.debug ("<{addr}> checking if nick {nickname} is registered for app {appId} in db ".format(**locals()))
   cursor = db.cursor()
   try:
     sql = "SELECT user.nickname FROM user INNER JOIN app_user ON user.userid = app_user.userid and user.nickname like %s and app_user.appid = %s;"
@@ -468,13 +455,13 @@ def do_check_registered_nickname_for_app(appId, userId, nickname, addr, db):
     results = cursor.fetchone()
     logging.debug(results)
     if results == None:
-      logging.debug ("<{threadName}-{addr}> nickname {nickname} is not registered for appId {appId} in db".format(**locals()))
+      logging.debug ("<{addr}> nickname {nickname} is not registered for appId {appId} in db".format(**locals()))
       return STATUS_UNREGISTERED_NICKNAME
     else:
-      logging.debug ("<{threadName}-{addr}> nickname {nickname} is registered for appId {appId} in db".format(**locals()))
+      logging.debug ("<{addr}> nickname {nickname} is registered for appId {appId} in db".format(**locals()))
       return STATUS_OK
   except IntegrityError as e:
-      logging.debug ("<{threadName}-{addr}> Caught an IntegrityError:"+str(e))
+      logging.debug ("<{addr}> Caught an IntegrityError:"+str(e))
       return STATUS_INTERNAL_ERROR
 
 
@@ -495,7 +482,6 @@ def isValidUserIdForApp(userId, appId, db):
 
 
 def handle_register(appId, userId, addr, db):
-  threadName = threading.currentThread().name    
   alreadyRegistered = False
   cursor = db.cursor()
   sql = "select * from mbox.app_user where userId = %s and appid = %s"
@@ -504,25 +490,25 @@ def handle_register(appId, userId, addr, db):
   #logging.debug(results)
 
   if results == None:
-    logging.debug ("<{threadName}-{addr}>: userId not in app_user for app {appId} in db".format(**locals()))
+    logging.debug ("<{addr}>: userId not in app_user for app {appId} in db".format(**locals()))
     registeredOk = do_register_user(appId, userId, addr, cursor, db)
     if not(registeredOk):
       response = build_response(STATUS_INTERNAL_ERROR)
-      logging.debug("<{threadName}-{addr}>: REGISTER failed. Response: {response}".format(**locals()))
+      logging.debug("<{addr}>: REGISTER failed. Response: {response}".format(**locals()))
       return response
   else:
-      logging.debug ("<{threadName}-{addr}>: userId {userId} already in db for app {appId}".format(**locals()))
+      logging.debug ("<{addr}>: userId {userId} already in db for app {appId}".format(**locals()))
       alreadyRegistered = True
 
   sql = "select nickname from mbox.user where userId like %s"
   cursor.execute(sql, (userId))
   nickname = cursor.fetchone()[0]
-  logging.debug ("<{threadName}-{addr}>: userId {userId} has nickname {nickname} in db".format(**locals()))
+  logging.debug ("<{addr}>: userId {userId} has nickname {nickname} in db".format(**locals()))
   zNickname = zeroPad(nickname,20)
   statusBytearray = bytearray(1)
   statusBytearray[0] = STATUS_USER_ALREADY_REGISTERED if alreadyRegistered else STATUS_REGISTER_OK
   response = bytes(bytearray(statusBytearray + zNickname))
-  logging.debug("<{threadName}-{addr}>: response: {response}".format(**locals()))
+  logging.debug("<{addr}>: response: {response}".format(**locals()))
   return response
 
  
@@ -538,15 +524,14 @@ def zeroPad(s, length):
 
 
 def do_register_user(appId, userId, addr, cursor, db):
-  threadName = threading.currentThread().name    
-  logging.debug ("<{threadName}-{addr}> userId {userId} is not yet registered for app {appId} in db ".format(**locals()))
+  logging.debug ("<{addr}> userId {userId} is not yet registered for app {appId} in db ".format(**locals()))
   try:
       sql = "INSERT INTO app_user (appid, userId) VALUES (%s, %s)"
       cursor.execute(sql, (appId, userId,))
       db.commit()
       return True
   except IntegrityError as e:
-      logging.debug ("<{threadName}-{addr}>: Caught a IntegrityError:"+str(e))
+      logging.debug ("<{addr}>: Caught a IntegrityError:"+str(e))
       return False
 
 
